@@ -1,46 +1,56 @@
 package com.example.mytimer
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.mytimer.ui.theme.AndkotTheme
+import android.os.SystemClock
+import android.view.KeyEvent
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.mytimer.databinding.ActivityMainBinding
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
+    var initTime = 0L
+    var pauseTime = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            AndkotTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
-            }
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.startButton.setOnClickListener {
+            binding.chronometer.base = SystemClock.elapsedRealtime()+pauseTime
+            binding.chronometer.start()
+            binding.stopButton.isEnabled=true
+            binding.resetButton.isEnabled=true
+            binding.startButton.isEnabled=false
+        }
+
+        binding.stopButton.setOnClickListener {
+            pauseTime=binding.chronometer.base - SystemClock.elapsedRealtime()
+            binding.chronometer.stop()
+            binding.stopButton.isEnabled=false
+            binding.resetButton.isEnabled=true
+            binding.startButton.isEnabled=true
+        }
+
+        binding.resetButton.setOnClickListener {
+            pauseTime = 0L
+            binding.chronometer.base = SystemClock.elapsedRealtime()
+            binding.chronometer.stop()
+            binding.stopButton.isEnabled=false
+            binding.resetButton.isEnabled=false
+            binding.startButton.isEnabled=true
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AndkotTheme {
-        Greeting("Android")
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            if(System.currentTimeMillis() - initTime > 3000){
+                Toast.makeText(this, "종료하려면 한 번 더 누르세요!!", Toast.LENGTH_SHORT).show()
+                initTime = System.currentTimeMillis()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 }
